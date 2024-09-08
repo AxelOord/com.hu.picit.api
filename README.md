@@ -10,7 +10,7 @@ This API is developed as part of the Associate Degree Software Development (ADSD
 
 1. Clone the repository:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/AxelOord/com.hu.picit.api
     ```
 2. Compile the project:
     ```bash
