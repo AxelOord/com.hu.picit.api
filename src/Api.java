@@ -1,14 +1,14 @@
 import com.sun.net.httpserver.HttpServer;
-import controllers.HelloController;
+import controllers.ResourceController;
 import controllers.RouterController;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-public class App {
+public class Api {
 
-    private static final Logger logger = Logger.getLogger(App.class.getName());
+    private static final Logger logger = Logger.getLogger(Api.class.getName());
     private static final int DEFAULT_PORT = 8080;
 
     public static void main(String[] args) {
@@ -18,7 +18,7 @@ public class App {
 
             // Automatically register controllers
             RouterController router = new RouterController(Arrays.asList(
-                new HelloController()
+                new ResourceController()
             ));
 
             // Create context for the API
