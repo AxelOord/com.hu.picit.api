@@ -1,70 +1,56 @@
 package controllers;
 
-import com.sun.net.httpserver.HttpHandler;
-
-import enums.MethodEnum;
-import models.Route;
+import models.Response;
 
 import com.sun.net.httpserver.HttpExchange;
+
+import annotations.Controller;
+import enums.HttpStatusCodeEnum;
+
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
 
-public abstract class BaseController implements HttpHandler, IController {
-    private static List<Route> routes = new ArrayList<>();
-
-    protected void registerRoute(MethodEnum method, String pattern, RouteHandler handler) {
-        routes.add(new Route(method, pattern, handler));
-    }
-
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String requestURI = exchange.getRequestURI().toString();
-        String method = exchange.getRequestMethod().toUpperCase();
-
-        boolean patternMatched = false;
-
-        for (Route route : routes) {
-            Matcher matcher = route.getMatcher(requestURI);
-
-            // Check if the pattern matches the request URI
-            if (matcher.matches()) {
-                patternMatched = true;
-
-                // If both method and pattern match
-                if (route.matches(method, requestURI)) {
-                    // Extract parameters from the URI
-                    Map<String, String> params = route.extractParameters(requestURI);
-
-                    // Pass the parameters to the handler
-                    route.getHandler().handle(exchange, params);
-                    return;
-                }
+public abstract class BaseController {
+    public void sendResponse(HttpExchange exchange, Response response) throws IOException {
+        try {
+            String json = response.toJson();
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(response.getStatus(), json.length());
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(json.getBytes());
             }
-        }
-
-        // Return appropriate status codes
-        if (patternMatched) {
-            exchange.sendResponseHeaders(405, -1); // Method Not Allowed
-        } else {
-            exchange.sendResponseHeaders(404, -1); // Not Found
-        }
-    }
-
-    // TODO: implement error handling, and different response codes and maybe handling of types
-    // TODO: implement a way to send JSON responses
-    public void sendResponse(HttpExchange exchange, String response) throws IOException {
-        exchange.sendResponseHeaders(200, response.length());
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes());
+        } catch (IOException e) {
+            // TODO: better error handling
+            e.printStackTrace();
+            exchange.sendResponseHeaders(HttpStatusCodeEnum.BAD_REQUEST.getCode(), 0); // Internal Server Error
+        } finally {
+            exchange.close();
         }
     }
 
-    @FunctionalInterface
-    public interface RouteHandler {
-        void handle(HttpExchange exchange, Map<String, String> params) throws IOException;
+    public String getBasePath() {
+        String className = this.getClass().getSimpleName();
+
+        // Check if the class is annotated with @Controller
+        if (this.getClass().isAnnotationPresent(Controller.class)) {
+            Controller controllerAnnotation = this.getClass().getAnnotation(Controller.class);
+            String basePath = controllerAnnotation.value();
+
+            // If basePath contains the [controller] placeholder, replace it
+            if (basePath.contains("[controller]")) {
+                // Remove "Controller" suffix from the class name
+                if (className.endsWith("Controller")) {
+                    className = className.replace("Controller", "");
+                }
+
+                // Replace [controller] with the resource name
+                basePath = basePath.replace("[controller]", className.toLowerCase());
+            }
+
+            return basePath;
+        }
+
+        // Default fallback in case there's no @Controller annotation, which should never happen
+        return "/api/" + className.toLowerCase();
     }
 }

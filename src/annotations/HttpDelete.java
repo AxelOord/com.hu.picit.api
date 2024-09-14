@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpRoute(method = MethodEnum.DELETE)
+@HttpMethod(method = MethodEnum.DELETE)
 public @interface HttpDelete {
     String value() default "";
 }

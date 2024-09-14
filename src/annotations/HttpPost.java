@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpRoute(method = MethodEnum.POST)
+@HttpMethod(method = MethodEnum.POST)
 public @interface HttpPost {
     String value() default "";
 }

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import controllers.BaseController.RouteHandler;
+import controllers.RouterController.RouteHandler;
 import enums.MethodEnum;
 
 public class Route {
@@ -14,10 +14,22 @@ public class Route {
 
     // Constructor, converting {param} into regex groups
     public Route(MethodEnum method, String pattern, RouteHandler handler) {
-        // Convert route patterns like /users/{id} to regex /users/(\w+)
+        // Convert route patterns like /users/{id} to regex /users/(?<id>[^/]+)
         this.method = method;
         this.pattern = Pattern.compile(pattern.replaceAll("\\{([^/]+)\\}", "(?<$1>[^/]+)"));
         this.handler = handler;
+    }
+
+    public Matcher getMatcher(String requestURI) {
+        return pattern.matcher(requestURI);
+    }
+
+    public MethodEnum getMethod() {
+        return method;
+    }
+
+    public RouteHandler getHandler() {
+        return handler;
     }
 
     // Matches both the method and the pattern
@@ -47,17 +59,5 @@ public class Route {
         }
         // Return the map with the extracted parameters
         return params;
-    }
-
-    public Matcher getMatcher(String requestURI) {
-        return pattern.matcher(requestURI);
-    }
-
-    public MethodEnum getMethod() {
-        return method;
-    }
-
-    public RouteHandler getHandler() {
-        return handler;
     }
 }

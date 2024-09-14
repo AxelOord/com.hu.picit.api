@@ -1,9 +1,7 @@
 import com.sun.net.httpserver.HttpServer;
-import controllers.ResourceController;
 import controllers.RouterController;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class Api {
@@ -15,11 +13,8 @@ public class Api {
         try {
             int port = getPortFromArgs(args);
             HttpServer server = createServer(port);
-
-            // Automatically register controllers
-            RouterController router = new RouterController(Arrays.asList(
-                new ResourceController()
-            ));
+            
+            RouterController router = new RouterController();
 
             // Create context for the API
             server.createContext("/api", router);

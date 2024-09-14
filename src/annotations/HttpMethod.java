@@ -7,9 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod(method = MethodEnum.PUT)
-public @interface HttpPut {
-    String value() default "";
+public @interface HttpMethod {
+    MethodEnum method();  // HTTP method
+    String value() default "";  // Route path
 }
