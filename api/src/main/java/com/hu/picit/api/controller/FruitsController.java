@@ -19,6 +19,11 @@ public class FruitsController extends BaseController {
         return fruitService.getFruits();
     }
 
+    @HttpGet("/recommended")
+    private List<FruitDTO> getRecommendedFruits(){
+        return fruitService.getRecommendedFruits();
+    }
+
     @HttpGet("/{id}")
     private FruitDTO getFruit(@PathVariable("id") int id){
         FruitDTO fruit = fruitService.getFruit(id);

@@ -5,17 +5,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.hu.picit.app.model.SharedFruitViewModel
 
 @Composable
 fun HomeScreen(
     homeUiState: HomeUiState,
+    sharedFruitViewModel: SharedFruitViewModel,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    navController: NavController?
 ) {
     when (homeUiState) {
         is HomeUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
         is HomeUiState.Success -> {
-            ResultScreen(locations = homeUiState.locationResponse, categories = homeUiState.categoryResponse)
+            ResultScreen(
+                navController = navController,
+                sharedFruitViewModel = sharedFruitViewModel,
+                locations = homeUiState.locationResponse,
+                categories = homeUiState.categoryResponse,
+                recommendedFruits = homeUiState.recommendedFruits)
         }
         is HomeUiState.Error -> ErrorScreen(modifier = modifier.fillMaxSize())
     }

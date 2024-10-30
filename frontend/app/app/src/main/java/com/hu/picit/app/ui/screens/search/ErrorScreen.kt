@@ -1,4 +1,4 @@
-package com.hu.picit.app.ui.screens.home
+package com.hu.picit.app.ui.screens.search
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

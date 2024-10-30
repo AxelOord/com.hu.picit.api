@@ -1,7 +1,9 @@
 package com.hu.picit.app.network
 
-import com.hu.picit.app.model.CategoryResponse
-import com.hu.picit.app.model.LocationResponse
+import com.hu.picit.app.model.ApiResponse
+import com.hu.picit.app.model.CategoryAttributes
+import com.hu.picit.app.model.FruitAttributes
+import com.hu.picit.app.model.LocationAttributes
 import com.squareup.moshi.Moshi
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -22,10 +24,16 @@ private val retrofit = Retrofit.Builder()
 
 interface ApiService {
     @GET("locations")
-    suspend fun getLocations(): LocationResponse
+    suspend fun getLocations(): ApiResponse<LocationAttributes>
 
     @GET("categories")
-    suspend fun getCategories(): CategoryResponse
+    suspend fun getCategories(): ApiResponse<CategoryAttributes>
+
+    @GET("fruits")
+    suspend fun getFruits(): ApiResponse<FruitAttributes>
+
+    @GET("fruits/recommended")
+    suspend fun getRecommendedFruits(): ApiResponse<FruitAttributes>
 }
 
 // Using lazy delegation to create the retrofitService instance

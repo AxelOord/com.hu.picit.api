@@ -13,9 +13,10 @@ public class CategoryService {
 
     static {
         categories.add(new Category("Citrusvruchten"));
-        categories.add(new Category("Tropisch fruit"));
+        categories.add(new Category("Tropisch"));
         categories.add(new Category("Bessen"));
-        categories.add(new Category("Steenvruchten"));
+        categories.add(new Category("Steen vruchten"));
+        categories.add(new Category("Meloenen"));
     }
 
     public List<CategoryDTO> getCategories() {
