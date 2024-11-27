@@ -9,14 +9,14 @@ import main.java.com.hu.core.controller.BaseController;
 import java.lang.reflect.Method;
 import main.java.com.hu.core.enums.MethodEnum;
 
-public class Route {
+public class Route<T> {
     private final MethodEnum method;
     private final Pattern pattern;
     private final Method handlerMethod;
-    private final BaseController instance;
+    private final BaseController<T> instance;
 
     // Constructor, converting {param} into regex groups
-    public Route(MethodEnum method, String pattern, Method handler, BaseController controller) {
+    public Route(MethodEnum method, String pattern, Method handler, BaseController<T> controller) {
         // Convert route patterns like /users/{id} to regex /users/(?<id>[^/]+)
         this.method = method;
         this.pattern = Pattern.compile(pattern.replaceAll("\\{([^/]+)\\}", "(?<$1>[^/]+)"));
@@ -24,7 +24,7 @@ public class Route {
         this.instance = controller;
     }
 
-    public BaseController getInstance() {
+    public BaseController<T> getInstance() {
         return instance;
     }
 

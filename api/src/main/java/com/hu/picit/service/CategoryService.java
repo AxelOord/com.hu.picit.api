@@ -12,11 +12,15 @@ public class CategoryService {
     private CategoryDTOMapper categoryDTOMapper = new CategoryDTOMapper();
 
     static {
-        categories.add(new Category("Citrusvruchten"));
-        categories.add(new Category("Tropisch"));
-        categories.add(new Category("Bessen"));
-        categories.add(new Category("Steen vruchten"));
-        categories.add(new Category("Meloenen"));
+        categories.add(new Category("Citrusvruchten", "citrus cat"));
+        categories.add(new Category("Tropisch", "tropisch cat"));
+        categories.add(new Category("Bessen" , "bessen cat"));
+        categories.add(new Category("Steen vruchten", "steen cat"));
+        categories.add(new Category("Meloenen", "meloenen cat"));
+    }
+
+    public static List<Category> getCategoriesList() {
+        return categories;
     }
 
     public List<CategoryDTO> getCategories() {

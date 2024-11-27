@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import com.hu.picit.app.model.SharedCartViewModel
+import com.hu.picit.app.model.SharedCategoryViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
+import com.hu.picit.app.network.ApiServiceProvider
 import com.hu.picit.app.ui.components.BottomBar
 import com.hu.picit.app.ui.screens.cart.CartScreen
 import com.hu.picit.app.ui.screens.cart.CartViewModel
@@ -36,10 +39,12 @@ sealed class Screen(val route: String) {
 @Composable
 fun PicitApp() {
     val navController = rememberNavController()
-    val sharedViewModel: SharedFruitViewModel = viewModel()
+    val sharedFruitViewModel: SharedFruitViewModel = viewModel()
+    val sharedCartViewModel: SharedCartViewModel = viewModel()
+    val sharedCategoryViewModel: SharedCategoryViewModel = viewModel()
 
     Scaffold(
-        bottomBar = { BottomBar(navController = navController) }
+        bottomBar = { BottomBar(navController = navController, sharedCartViewModel) }
     ) { contentPadding ->
         Surface(
             modifier = Modifier
@@ -50,13 +55,18 @@ fun PicitApp() {
                 navController = navController,
                 startDestination = "PicitRoute",
                 ) {
-                picitGraph(navController, sharedViewModel)
+                picitGraph(navController, sharedFruitViewModel, sharedCartViewModel, sharedCategoryViewModel)
             }
         }
     }
 }
 
-fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: SharedFruitViewModel) {
+fun NavGraphBuilder.picitGraph(
+    navController: NavController,
+    sharedViewModel: SharedFruitViewModel,
+    sharedCartViewModel: SharedCartViewModel,
+    sharedCategoryViewModel: SharedCategoryViewModel
+) {
     navigation(
         startDestination = Screen.Home.route, route = "PicitRoute"
     ) {
@@ -72,7 +82,9 @@ fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: Sh
             HomeScreen(
                 homeUiState = homeViewModel.homeUiState,
                 navController = navController,
-                sharedFruitViewModel = sharedViewModel
+                sharedFruitViewModel = sharedViewModel,
+                sharedCartViewModel = sharedCartViewModel,
+                sharedCategoryViewModel = sharedCategoryViewModel
             )
         }
 
@@ -91,7 +103,8 @@ fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: Sh
             ProductScreen(
                 productUiState = productViewModel.productUiState,
                 navController = navController,
-                sharedFruitViewModel = sharedViewModel
+                sharedFruitViewModel = sharedViewModel,
+                sharedCartViewModel = sharedCartViewModel
             )
         }
 
@@ -110,7 +123,10 @@ fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: Sh
             SearchScreen(
                 searchUiState = searchViewModel.searchUiState,
                 navController = navController,
-                sharedFruitViewModel = sharedViewModel
+                sharedFruitViewModel = sharedViewModel,
+                sharedCartViewModel = sharedCartViewModel,
+                sharedCategoryViewModel = sharedCategoryViewModel,
+                searchViewModel = searchViewModel
             )
         }
 
@@ -130,6 +146,9 @@ fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: Sh
                 searchUiState = searchViewModel.searchUiState,
                 navController = navController,
                 sharedFruitViewModel = sharedViewModel,
+                sharedCartViewModel = sharedCartViewModel,
+                sharedCategoryViewModel = sharedCategoryViewModel,
+                searchViewModel = searchViewModel,
                 allFavorite = true
             )
         }
@@ -148,7 +167,8 @@ fun NavGraphBuilder.picitGraph(navController: NavController, sharedViewModel: Sh
             val cartViewModel: CartViewModel = viewModel()
             CartScreen(
                 navController = navController,
-                cartUiState = cartViewModel.cartUiState
+                cartUiState = cartViewModel.cartUiState,
+                sharedCartViewModel = sharedCartViewModel
             )
         }
     }

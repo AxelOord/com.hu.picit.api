@@ -19,7 +19,7 @@ import main.java.com.hu.core.util.ArgUtil;
 import main.java.com.hu.core.util.ControllerUtil;
 
 public class RouterController implements HttpHandler {
-    private static List<Route> routes = new ArrayList<>();
+    private static List<Route<?>> routes = new ArrayList<>();
 
     public RouterController() {
         registerRoutesFromPackage();
@@ -32,7 +32,7 @@ public class RouterController implements HttpHandler {
 
         boolean patternMatched = false;
 
-        for (Route route : routes) {
+        for (Route<?> route : routes) {
             Matcher matcher = route.getMatcher(requestURI);
 
             // Check if the pattern matches the request URI
@@ -44,14 +44,14 @@ public class RouterController implements HttpHandler {
                     Map<String, String> params = route.extractParameters(requestURI);
 
                     try {
-                        Object[] methodArgs = ArgUtil.resolveMethodArguments(route.getHandlerMethod(), exchange,
-                                params);
+                        Object[] methodArgs = ArgUtil.resolveMethodArguments(route.getHandlerMethod(), exchange, params);
 
                         // Invoke the handler method
                         route.getHandlerMethod().setAccessible(true);
                         Object result = route.getHandlerMethod().invoke(route.getInstance(), methodArgs);
 
-                        route.getInstance().sendResponse(exchange, result);
+                        // Use the correct type for the BaseController instance
+                        sendResponse(route, exchange, result);
 
                     } catch (IllegalArgumentException e) {
                         e.printStackTrace();
@@ -73,30 +73,31 @@ public class RouterController implements HttpHandler {
         }
     }
 
+    private <T> void sendResponse(Route<T> route, HttpExchange exchange, Object result) throws IOException {
+        @SuppressWarnings("unchecked")
+        T typedResult = (T) result;
+        route.getInstance().sendResponse(exchange, typedResult);
+    }
+
     public void registerRoutesFromPackage() {
         try {
             // Find all controller classes in the controllers package
-            List<Class<?>> controllers = ControllerUtil.findControllers("main.java.com.hu.picit.api.controller");
+            List<BaseController<?>> controllers = ControllerUtil.findControllers("main.java.com.hu.picit.api.controller");
 
-            for (Class<?> controllerClass : controllers) {
-                // Create an instance of the controller
-                BaseController controllerInstance = (BaseController) controllerClass.getDeclaredConstructor()
-                        .newInstance();
-
+            for (BaseController<?> controllerClass : controllers) {
                 // Register routes for the controller instance
-                registerAnnotatedRoutes(controllerInstance);
+                registerAnnotatedRoutes(controllerClass);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    protected void registerAnnotatedRoutes(BaseController controller) {
+    protected void registerAnnotatedRoutes(BaseController<?> controller) {
         Method[] methods = controller.getClass().getDeclaredMethods();
 
         for (Method method : methods) {
-            // Check if any annotations on the method are themselves annotated with
-            // @HttpMethod
+            // Check if any annotations on the method are themselves annotated with @HttpMethod
             for (Annotation annotation : method.getDeclaredAnnotations()) {
                 HttpMethod routeInfo = annotation.annotationType().getAnnotation(HttpMethod.class);
 
@@ -121,7 +122,7 @@ public class RouterController implements HttpHandler {
         }
     }
 
-    protected void registerRoute(MethodEnum method, String pattern, BaseController controller, Method handler) {
-        routes.add(new Route(method, pattern, handler, controller));
+    protected <T> void registerRoute(MethodEnum method, String pattern, BaseController<T> controller, Method handler) {
+        routes.add(new Route<>(method, pattern, handler, controller));
     }
 }

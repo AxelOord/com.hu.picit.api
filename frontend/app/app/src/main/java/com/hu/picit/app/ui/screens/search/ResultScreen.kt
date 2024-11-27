@@ -10,18 +10,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,15 +29,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,64 +44,58 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.hu.picit.app.model.Fruit
+import com.hu.picit.app.model.SharedCartViewModel
+import com.hu.picit.app.model.SharedCategoryViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
 import com.hu.picit.app.model.sampleFruits
 import com.hu.picit.app.ui.components.FruitItem
+import com.hu.picit.app.ui.components.TopBar
 import com.hu.picit.app.ui.theme.PicitTheme
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
     fruits: List<Fruit>,
-    navController: NavController?,
+    navController: NavController,
     sharedFruitViewModel: SharedFruitViewModel,
+    sharedCartViewModel: SharedCartViewModel,
+    sharedCategoryViewModel: SharedCategoryViewModel,
+    searchViewModel: SearchViewModel,
     allFavorite: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val filters = listOf("Citrus", "Berries", "Tropical", "Stone Fruits", "Melons", "Pomes")
-    val selectedStates = remember { mutableStateListOf(*Array(filters.size) { false }) }
-
+    val categories by sharedCategoryViewModel.categories.collectAsState()
     var selectedOption by remember { mutableStateOf("Populariteit") } // Default option
+
+    val sheetState = rememberModalBottomSheetState()
+    val filterSheetState = rememberModalBottomSheetState()
 
     var isSheetOpen by rememberSaveable() {
         mutableStateOf(false)
     }
 
+    var isFilterSheetOpen by rememberSaveable() {
+        mutableStateOf(false)
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(top = 12.dp),
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = White),
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = { navController?.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "Back",
-                            tint = Gray,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController?.navigate(Screen.Cart.route) }) {
-                        Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Cart",
-                            tint = Gray
-                        )
-                    }
+            TopBar(navController) {
+                IconButton(onClick = { /* Custom action */ }) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search",
+                        tint = Gray
+                    )
                 }
-            )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -120,16 +108,17 @@ fun ResultScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
                     FilterButton(
                         text = "Filteren",
                         icon = Icons.Filled.FilterList,
-                        onClick = { isSheetOpen = true}
+                        onClick = { isFilterSheetOpen = true }
                     )
                 }
+
                 item {
                     FilterButton(
                         text = "Sorteren",
@@ -138,12 +127,17 @@ fun ResultScreen(
                     )
                 }
 
-                filters.forEachIndexed { index, filter ->
-                    item {
+                items(categories) { category ->
+                    val isSelected by category.selected.collectAsState()
+
+                    if (isSelected) {
                         FilterButton(
-                            text = filter,
-                            isSelected = selectedStates[index],
-                            onClick = { selectedStates[index] = !selectedStates[index] }
+                            text = category.name,
+                            isSelected = true,
+                            onClick = {
+                                category.selected.value = false
+                                searchViewModel.updateFilters(null)
+                            }
                         )
                     }
                 }
@@ -153,7 +147,7 @@ fun ResultScreen(
                 modifier = modifier
                     .fillMaxSize()
                     .background(White)
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 8.dp),
             ) {
                 items(fruits.chunked(2)) { fruitPair ->
                     Row(
@@ -166,8 +160,57 @@ fun ResultScreen(
                                 fruit = fruit,
                                 allFavorite = allFavorite,
                                 modifier = Modifier.weight(1f),
-                                navController = navController!!,
-                                sharedFruitViewModel = sharedFruitViewModel
+                                navController = navController,
+                                sharedFruitViewModel = sharedFruitViewModel,
+                                sharedCartViewModel = sharedCartViewModel
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isFilterSheetOpen) {
+            ModalBottomSheet(
+                sheetState = filterSheetState,
+                onDismissRequest = {
+                    isFilterSheetOpen = false
+                }
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Filter op:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    categories.forEach { category ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = category.selected.collectAsState().value,
+                                onClick = {
+                                    if (category.selected.value) {
+                                        // If already selected, simply deselect
+                                        category.selected.value = false
+                                        searchViewModel.updateFilters(null)
+                                    } else {
+                                        // Deselect all other categories and then select the current one
+                                        sharedCategoryViewModel.deselectAllCategories(category)
+                                        category.selected.value = true
+                                        searchViewModel.updateFilters(category)
+                                    }
+                                }
+                            )
+                            Text(
+                                text = category.name,
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                         }
                     }
@@ -245,6 +288,6 @@ fun FilterButton(text: String, icon: ImageVector? = null, onClick: (() -> Unit)?
 @Composable
 fun ResultScreenPreview() {
     PicitTheme {
-        ResultScreen(fruits = sampleFruits(), null, SharedFruitViewModel(),false)
+        ResultScreen(fruits = sampleFruits(), NavController(LocalContext.current), SharedFruitViewModel(), SharedCartViewModel(), SharedCategoryViewModel(), SearchViewModel(), allFavorite = false)
     }
 }

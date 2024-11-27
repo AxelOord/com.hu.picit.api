@@ -1,9 +1,7 @@
 package main.java.com.hu.picit;
-import com.sun.net.httpserver.HttpServer;
 
-import main.java.com.hu.core.controller.RouterController;
+import main.java.com.hu.core.server.ServerInitializer;
 
-import java.net.InetSocketAddress;
 import java.util.logging.Logger;
 
 public class Api {
@@ -14,22 +12,8 @@ public class Api {
     public static void main(String[] args) {
         try {
             int port = getPortFromArgs(args);
-            HttpServer server = createServer(port);
-            
-            RouterController router = new RouterController();
-
-            // Create context for the API
-            server.createContext("/api", router);
-
-            server.start();
-            logger.info("Server is listening on port " + port + "...");
-
-            // Add shutdown hook for graceful shutdown
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                server.stop(1);
-                logger.info("Server stopped gracefully.");
-            }));
-
+            ServerInitializer serverInitializer = new ServerInitializer(port);
+            serverInitializer.startServer();
         } catch (Exception e) {
             logger.severe("Error starting server: " + e.getMessage());
         }
@@ -44,9 +28,5 @@ public class Api {
             }
         }
         return DEFAULT_PORT;
-    }
-
-    private static HttpServer createServer(int port) throws Exception {
-        return HttpServer.create(new InetSocketAddress(port), 0);
     }
 }

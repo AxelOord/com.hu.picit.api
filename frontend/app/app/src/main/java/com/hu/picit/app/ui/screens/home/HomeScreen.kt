@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.hu.picit.app.model.SharedCartViewModel
+import com.hu.picit.app.model.SharedCategoryViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
 
 @Composable
@@ -13,8 +15,9 @@ fun HomeScreen(
     homeUiState: HomeUiState,
     sharedFruitViewModel: SharedFruitViewModel,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    navController: NavController?
+    sharedCartViewModel: SharedCartViewModel,
+    sharedCategoryViewModel: SharedCategoryViewModel,
+    navController: NavController
 ) {
     when (homeUiState) {
         is HomeUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
@@ -23,8 +26,10 @@ fun HomeScreen(
                 navController = navController,
                 sharedFruitViewModel = sharedFruitViewModel,
                 locations = homeUiState.locationResponse,
-                categories = homeUiState.categoryResponse,
-                recommendedFruits = homeUiState.recommendedFruits)
+                recommendedFruits = homeUiState.recommendedFruits,
+                sharedCartViewModel = sharedCartViewModel,
+                sharedCategoryViewModel = sharedCategoryViewModel
+            )
         }
         is HomeUiState.Error -> ErrorScreen(modifier = modifier.fillMaxSize())
     }

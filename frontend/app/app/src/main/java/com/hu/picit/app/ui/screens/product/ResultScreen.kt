@@ -1,11 +1,11 @@
 package com.hu.picit.app.ui.screens.product
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,27 +16,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,61 +39,43 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
-import com.hu.picit.app.model.Fruit
+import coil.request.ImageRequest
+import coil.size.Size
+import com.cloudinary.transformation.resize.Resize
+import com.hu.picit.app.model.SharedCartViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
-import com.hu.picit.app.model.sampleFruits
-import com.hu.picit.app.ui.components.CategoriesRow
-import com.hu.picit.app.ui.components.Category
-import com.hu.picit.app.ui.components.FruitItem
-import com.hu.picit.app.ui.components.LocationDropdown
-import com.hu.picit.app.ui.components.ParallaxHeader
-import com.hu.picit.app.ui.screens.home.getPlaceholderImageUrl
+import com.hu.picit.app.network.cloudinary
+import com.hu.picit.app.ui.components.QuantityPicker
+import com.hu.picit.app.ui.components.TopBar
 import com.hu.picit.app.ui.theme.PicitTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
     sharedFruitViewModel: SharedFruitViewModel,
-    navController: NavController?,
+    navController: NavController,
+    sharedCartViewModel: SharedCartViewModel
 ) {
     val fruit = sharedFruitViewModel.selectedFruit
+    var selectedQuantity by remember { mutableStateOf("1 kg") }
+
+    val cartItems by sharedCartViewModel.cartItems.collectAsState()
+
+    val fruitQuantityInCart = cartItems.find { it.fruit.id == fruit.id }?.quantity ?: 0
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(top = 12.dp),
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = White),
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = { navController?.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "Back",
-                            tint = Gray,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Cart",
-                            tint = Gray
-                        )
-                    }
-                }
-            )
-        }
+            TopBar(navController)
+        },
+        containerColor = White
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -108,33 +84,41 @@ fun ResultScreen(
                 .padding(horizontal = 16.dp)
                 .background(Color.White)
         ) {
-            // Image Slider (Placeholder, add real image carousel as needed)
-            Image(
-                painter = rememberAsyncImagePainter(fruit.imageUrl),
-                contentDescription = "Fruit Image",
+            val img = cloudinary.image {
+                publicId(fruit.imageUrl)
+                resize(Resize.fill {
+                    width(200)
+                    height(200)
+                })
+            }
+
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(Uri.parse(img.generate()))
+                    .size(Size.ORIGINAL)
+                    .build(),
+                contentDescription = fruit.name,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.5f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(18.dp))
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Country of origin
             Text(
                 text = fruit.countryOfOrigin,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
 
-            // Fruit name
             Text(
                 text = fruit.name,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
 
-            // Price
             Text(
                 text = "$${fruit.pricePerKg}/kg",
                 style = MaterialTheme.typography.titleMedium,
@@ -143,45 +127,60 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Quantity selector (Dropdown or Picker)
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Hoeveelheid",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                // Replace this DropdownMenu with actual quantity picker
-                Text(
-                    text = "1 kg",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp)
-                )
-            }
+            QuantityPicker(
+                selectedOption = selectedQuantity,
+                onOptionSelected = { selectedQuantity = it }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Add to Cart and Favorite Buttons
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { /* Add to cart logic */ },
+                    onClick = { sharedCartViewModel.addToCart(fruit, quantityLabel = selectedQuantity) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Add to Cart",
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Voeg toe", color = Color.White)
+                    if (sharedCartViewModel.getFruitQuantityInCart(fruit) > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ) {
+                            IconButton(
+                                onClick = { sharedCartViewModel.decrementFruitFromCart(fruit) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Remove,
+                                    contentDescription = "Decrease quantity"
+                                )
+                            }
+                            Text(
+                                text = sharedCartViewModel.getFruitQuantityInCart(fruit).toString(),
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                            IconButton(
+                                onClick = { sharedCartViewModel.incrementFruitFromCart(fruit) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Increase quantity"
+                                )
+                            }
+                        }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Add to Cart",
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Voeg toe", color = Color.White)
+                    }
                 }
                 IconButton(
                     onClick = { /* Favorite logic */ },
@@ -199,7 +198,6 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Description
             Text(
                 text = "Fresh and juicy apples, perfect for a healthy snack.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -208,7 +206,6 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // View More
             Text(
                 text = "View More",
                 style = MaterialTheme.typography.bodySmall,
@@ -220,10 +217,11 @@ fun ResultScreen(
 }
 
 
+
 @Preview(showBackground = true)
 @Composable
 fun ResultScreenPreview() {
     PicitTheme {
-        ResultScreen(navController = null, sharedFruitViewModel = SharedFruitViewModel())
+        ResultScreen(navController = NavController(LocalContext.current), sharedFruitViewModel = SharedFruitViewModel(), sharedCartViewModel = SharedCartViewModel())
     }
 }

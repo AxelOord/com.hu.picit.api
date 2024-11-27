@@ -5,7 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hu.picit.app.model.ApiResponse
+import com.hu.picit.app.model.Category
 import com.hu.picit.app.model.Fruit
+import com.hu.picit.app.model.FruitAttributes
 import com.hu.picit.app.model.extractFruits
 import com.hu.picit.app.network.ApiServiceProvider
 import kotlinx.coroutines.launch
@@ -20,8 +23,14 @@ sealed interface SearchUiState {
 
 class SearchViewModel : ViewModel() {
     var searchUiState: SearchUiState by mutableStateOf(SearchUiState.Loading)
+    var currentFilter: Category? = null
 
     init {
+        getFruits()
+    }
+
+    fun updateFilters(newFilter: Category?) {
+        currentFilter = newFilter
         getFruits()
     }
 
@@ -29,7 +38,12 @@ class SearchViewModel : ViewModel() {
         viewModelScope.launch {
             searchUiState = SearchUiState.Loading
             searchUiState = try {
-                val fruitResponse = ApiServiceProvider.retrofitService.getFruits()
+                var fruitResponse : ApiResponse<FruitAttributes>
+                if (currentFilter != null) {
+                    fruitResponse = ApiServiceProvider.retrofitService.getFruits(currentFilter!!.id)
+                } else{
+                    fruitResponse = ApiServiceProvider.retrofitService.getFruits()
+                }
 
                 SearchUiState.Success(
                     extractFruits(fruitResponse)

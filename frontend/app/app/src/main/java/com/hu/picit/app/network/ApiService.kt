@@ -9,6 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
 
 private const val BASE_URL = "http://10.0.2.2:8080/api/"
 
@@ -31,6 +32,9 @@ interface ApiService {
 
     @GET("fruits")
     suspend fun getFruits(): ApiResponse<FruitAttributes>
+
+    @GET("fruits/category/{categoryId}")
+    suspend fun getFruits(@Path("categoryId") categoryId: Int): ApiResponse<FruitAttributes>
 
     @GET("fruits/recommended")
     suspend fun getRecommendedFruits(): ApiResponse<FruitAttributes>

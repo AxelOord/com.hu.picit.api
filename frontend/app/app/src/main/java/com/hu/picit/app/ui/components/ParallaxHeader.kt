@@ -70,8 +70,7 @@ fun ParallaxHeader(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Button(
-                onClick = onCtaClicked,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.hsl(9F, 1F, 0.64F, 1F))
+                onClick = onCtaClicked
             ) {
                 Text(text = "Shop nu", color = Color.White)
             }

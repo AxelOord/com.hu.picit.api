@@ -1,7 +1,9 @@
 package com.hu.picit.app.ui.components
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,28 +18,43 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Size
+import com.cloudinary.transformation.resize.Resize
 import com.hu.picit.app.R
+import com.hu.picit.app.model.Category
+import com.hu.picit.app.model.SharedCategoryViewModel
+import com.hu.picit.app.network.cloudinary
 
 @Composable
-fun CategoriesRow(categories: List<Category>, modifier: Modifier = Modifier) {
+fun CategoriesRow(
+    navController: NavController,
+    sharedCategoryViewModel: SharedCategoryViewModel,
+    modifier: Modifier = Modifier
+) {
+    var categories = sharedCategoryViewModel.categories.collectAsState().value
     val firstRowCount = when (categories.size) {
         in 5..Int.MAX_VALUE -> 2
         4 -> 2
         3 -> 1
-        else -> categories.size // For 2 or fewer categories
+        else -> categories.size
     }
-    val secondRowCount = categories.size - firstRowCount
 
     val firstRowCategories = categories.take(firstRowCount)
     val secondRowCategories = categories.drop(firstRowCount)
@@ -50,8 +67,8 @@ fun CategoriesRow(categories: List<Category>, modifier: Modifier = Modifier) {
             ) {
                 firstRowCategories.forEach { category ->
                     CategoryItem(
-                        name = category.name,
-                        imageUrl = category.imageUrl,
+                        category = category,
+                        navController = navController,
                         modifier = Modifier
                             .weight(1f)
                             .size(height = 120.dp, width = 160.dp)
@@ -67,8 +84,8 @@ fun CategoriesRow(categories: List<Category>, modifier: Modifier = Modifier) {
             ) {
                 secondRowCategories.forEach { category ->
                     CategoryItem(
-                        name = category.name,
-                        imageUrl = category.imageUrl,
+                        category = category,
+                        navController = navController,
                         modifier = Modifier
                             .weight(1f)
                             .size(height = 100.dp, width = 160.dp)
@@ -80,7 +97,11 @@ fun CategoriesRow(categories: List<Category>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CategoryItem(name: String, imageUrl: String, modifier: Modifier = Modifier) {
+fun CategoryItem(
+    category: Category,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -88,18 +109,49 @@ fun CategoryItem(name: String, imageUrl: String, modifier: Modifier = Modifier) 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.LightGray, shape = RoundedCornerShape(18.dp)),
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.LightGray)
+                .clickable(
+                    onClick = {
+                        category.selected.value = true
+                        navController.navigate(Screen.Categories.route)
+                    }
+                ),
             contentAlignment = Alignment.BottomStart
         ) {
+            val img = cloudinary.image {
+                publicId(category.img)
+                resize(Resize.fill {
+                    width(300)
+                    height(200)
+                })
+            }
             AsyncImage(
-                model = imageUrl,
-                contentDescription = name,
-                contentScale = ContentScale.FillWidth,
-                //contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(Uri.parse(img.generate()))
+                    .size(Size.ORIGINAL)
+                    .build(),
+                contentDescription = category.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
             )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp) // Adjust the height to control the gradient's reach
+                    .align(Alignment.BottomStart)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                            startY = 0f,
+                            endY = 150f // Adjust for gradient spread
+                        )
+                    )
+            )
+
             Text(
-                text = name,
+                text = category.name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium.copy(color = Color.White, fontSize = 18.sp),
                 modifier = Modifier
@@ -109,5 +161,3 @@ fun CategoryItem(name: String, imageUrl: String, modifier: Modifier = Modifier) 
         }
     }
 }
-
-data class Category(val name: String, val imageUrl: String)

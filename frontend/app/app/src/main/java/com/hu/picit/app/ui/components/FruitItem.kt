@@ -1,5 +1,6 @@
 package com.hu.picit.app.ui.components
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -26,21 +29,40 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Size
+import com.cloudinary.transformation.resize.Resize
 import com.hu.picit.app.model.Fruit
+import com.hu.picit.app.model.SharedCartViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
+import com.hu.picit.app.network.cloudinary
 
 @Composable
 fun FruitItem(
     fruit: Fruit,
     navController: NavController,
     sharedFruitViewModel: SharedFruitViewModel,
+    sharedCartViewModel: SharedCartViewModel,
     allFavorite: Boolean,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier
+) {
     val isFavorite = remember { mutableStateOf(false) }
+    val img = cloudinary.image {
+        publicId(fruit.imageUrl)
+        resize(Resize.fill {
+            width(200)
+            height(200)
+        })
+    }
+
 
     Column(
         modifier = modifier
@@ -56,21 +78,39 @@ fun FruitItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(Color.LightGray, shape = RoundedCornerShape(12.dp)),
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.LightGray),
             contentAlignment = Alignment.TopEnd,
         ) {
-            // Heart icon for favorite action
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(Uri.parse(img.generate()))
+                    .size(Size.ORIGINAL)
+                    .build(),
+                contentDescription = fruit.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+            )
             IconButton(
                 onClick = { isFavorite.value = !isFavorite.value },
                 modifier = Modifier
-                    .padding(8.dp)
-                    .size(24.dp)
+                    .padding(6.dp)
+                    .size(40.dp)
             ) {
-                Icon(
-                    imageVector = if (isFavorite.value || allFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (isFavorite.value || allFavorite) Color.Red else Color.Gray
-                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color.White, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite.value || allFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite.value || allFavorite) Color.Red else Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
@@ -96,7 +136,7 @@ fun FruitItem(
                     fontWeight = FontWeight.Medium
                 )
             }
-            IconButton(onClick = { /* Add to cart action */ }) {
+            IconButton(onClick = { sharedCartViewModel.addToCart(fruit, quantityLabel = "1 kg") }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     tint = Color.Gray,

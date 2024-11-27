@@ -19,6 +19,10 @@ public class LocationService {
         locations.add(new Location("Groningen"));
     }
 
+    public List<Location> getLocationsList() {
+        return locations;
+    }
+
     public List<LocationDTO> getLocations() {
         return locations.stream().map(l -> locationDTOMapper.apply(l)).toList();
     }

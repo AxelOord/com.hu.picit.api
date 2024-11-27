@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-public abstract class BaseController {
-    public void sendResponse(HttpExchange exchange, Object result) throws IOException {
+public abstract class BaseController<T> {
+    public void sendResponse(HttpExchange exchange, T result) throws IOException {
         try {
             if (result == null) {
                 // Send a 404 Not Found response if result is null
@@ -21,7 +21,7 @@ public abstract class BaseController {
                 return;
             }
 
-            Response<Object> response = new Response<>("Success").setData(result);
+            Response<T> response = new Response<T>("Success").setData(result);
 
             String json = JsonUtil.toJson(response);
             exchange.getResponseHeaders().set("Content-Type", "application/json");

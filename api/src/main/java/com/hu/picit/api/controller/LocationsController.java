@@ -6,11 +6,12 @@ import main.java.com.hu.core.annotation.Autowired;
 import main.java.com.hu.core.annotation.Controller;
 import main.java.com.hu.core.annotation.HttpGet;
 import main.java.com.hu.core.controller.BaseController;
+import main.java.com.hu.picit.api.model.location.Location;
 import main.java.com.hu.picit.api.model.location.LocationDTO;
 import main.java.com.hu.picit.service.LocationService;
 
 @Controller("/api/[controller]")
-public class LocationsController extends BaseController  {
+public class LocationsController extends BaseController<Location> {
     @Autowired
     private LocationService locationService = new LocationService();
 

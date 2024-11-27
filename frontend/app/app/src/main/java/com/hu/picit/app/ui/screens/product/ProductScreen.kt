@@ -2,7 +2,6 @@ package com.hu.picit.app.ui.screens.product
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -15,19 +14,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.hu.picit.app.model.SharedCartViewModel
 import com.hu.picit.app.model.SharedFruitViewModel
 
 @Composable
 fun ProductScreen(
     productUiState: ProductUiState,
     modifier: Modifier = Modifier,
-    navController: NavController?,
+    navController: NavController,
+    sharedCartViewModel: SharedCartViewModel,
     sharedFruitViewModel: SharedFruitViewModel
 ) {
     when (productUiState) {
         is ProductUiState.Loading -> LoadingScreen(modifier = modifier.fillMaxSize())
         is ProductUiState.Success -> {
-            ResultScreen(navController = navController, sharedFruitViewModel = sharedFruitViewModel)
+            ResultScreen(navController = navController, sharedFruitViewModel = sharedFruitViewModel, sharedCartViewModel = sharedCartViewModel)
         }
         is ProductUiState.Error -> {
             Column(

@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import main.java.com.hu.core.annotation.Controller;
+import main.java.com.hu.core.controller.BaseController;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.JarURLConnection;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -17,8 +19,8 @@ import java.util.jar.JarFile;
 
 public class ControllerUtil {
 
-    public static List<Class<?>> findControllers(String packageName) throws ClassNotFoundException, IOException {
-        List<Class<?>> controllerClasses = new ArrayList<>();
+    public static List<BaseController<?>> findControllers(String packageName) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchMethodException, SecurityException {
+        List<BaseController<?>> controllers = new ArrayList<>();
         String path = packageName.replace('.', '/');
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -33,22 +35,22 @@ public class ControllerUtil {
                 String filePath = URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8);
                 File directory = new File(filePath);
                 if (directory.exists()) {
-                    findClassesInDirectory(packageName, directory, controllerClasses);
+                    findClassesInDirectory(packageName, directory, controllers);
                 }
             } else if (resource.getProtocol().equals("jar")) {
                 // Scanning classes from a jar file
                 JarURLConnection jarConn = (JarURLConnection) resource.openConnection();
                 try (JarFile jarFile = jarConn.getJarFile()) {
-                    findClassesInJar(packageName, jarFile, controllerClasses);
+                    findClassesInJar(packageName, jarFile, controllers);
                 }
             }
         }
 
-        return controllerClasses;
+        return controllers;
     }
 
-    private static void findClassesInDirectory(String packageName, File directory, List<Class<?>> classes)
-            throws ClassNotFoundException {
+    private static void findClassesInDirectory(String packageName, File directory, List<BaseController<?>> controllers)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchMethodException, SecurityException {
         if (!directory.exists())
             return;
 
@@ -59,22 +61,23 @@ public class ControllerUtil {
         for (File file : files) {
             if (file.isDirectory()) {
                 // Recursively scan sub-packages
-                findClassesInDirectory(packageName + "." + file.getName(), file, classes);
+                findClassesInDirectory(packageName + "." + file.getName(), file, controllers);
             } else if (file.getName().endsWith(".class")) {
                 // Load the class
                 String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
                 Class<?> clazz = Class.forName(className);
 
-                // Check if the class is annotated with @Controller
-                if (clazz.isAnnotationPresent(Controller.class)) {
-                    classes.add(clazz);
+                // Check if the class is annotated with @Controller and extends BaseController
+                if (clazz.isAnnotationPresent(Controller.class) && BaseController.class.isAssignableFrom(clazz)) {
+                    BaseController<?> controllerInstance = (BaseController<?>) clazz.getDeclaredConstructor().newInstance();
+                    controllers.add(controllerInstance);
                 }
             }
         }
     }
 
-    private static void findClassesInJar(String packageName, JarFile jarFile, List<Class<?>> classes)
-            throws ClassNotFoundException {
+    private static void findClassesInJar(String packageName, JarFile jarFile, List<BaseController<?>> controllers)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Enumeration<JarEntry> entries = jarFile.entries();
         String packagePath = packageName.replace('.', '/');
 
@@ -91,9 +94,10 @@ public class ControllerUtil {
                 String className = entryName.replace('/', '.').substring(0, entryName.length() - 6);
                 Class<?> clazz = Class.forName(className);
 
-                // Check if the class is annotated with @Controller
-                if (clazz.isAnnotationPresent(Controller.class)) {
-                    classes.add(clazz);
+                // Check if the class is annotated with @Controller and extends BaseController
+                if (clazz.isAnnotationPresent(Controller.class) && BaseController.class.isAssignableFrom(clazz)) {
+                    BaseController<?> controllerInstance = (BaseController<?>) clazz.getDeclaredConstructor().newInstance();
+                    controllers.add(controllerInstance);
                 }
             }
         }
