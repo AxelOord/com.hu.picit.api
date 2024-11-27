@@ -123,6 +123,6 @@ public class RouterController implements HttpHandler {
     }
 
     protected <T> void registerRoute(MethodEnum method, String pattern, BaseController<T> controller, Method handler) {
-        routes.add(new Route<>(method, pattern, handler, controller));
+        routes.add(new Route<T>(method, pattern, handler, controller));
     }
 }
