@@ -21,8 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.hu.picit.app.model.SharedCartViewModel
@@ -38,34 +42,20 @@ private data class BottomNavigationItem(
 @Composable
 fun BottomBar(
     navController: NavController,
-    sharedCartViewModel: SharedCartViewModel
+    sharedCartViewModel: SharedCartViewModel,
+    testTagPrefix: String = "bottomBar"
 ) {
     val cartItems by sharedCartViewModel.cartItems.collectAsState()
 
     val navItems = listOf(
+        BottomNavigationItem("Home", Screen.Home.route, Icons.Filled.Home, Icons.Outlined.Home),
+        BottomNavigationItem("Categorieën", Screen.Categories.route, Icons.Filled.Search, Icons.Outlined.Search),
+        BottomNavigationItem("Favorieten", Screen.Favorites.route, Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder),
         BottomNavigationItem(
-            title = "Home",
-            route = Screen.Home.route,
-            selectedItem = Icons.Filled.Home,
-            unselectedItem = Icons.Outlined.Home
-        ),
-        BottomNavigationItem(
-            title = "Categorieën",
-            route = Screen.Categories.route,
-            selectedItem = Icons.Filled.Search,
-            unselectedItem = Icons.Outlined.Search
-        ),
-        BottomNavigationItem(
-            title = "Favorieten",
-            route = Screen.Favorites.route,
-            selectedItem = Icons.Filled.Favorite,
-            unselectedItem = Icons.Outlined.FavoriteBorder
-        ),
-        BottomNavigationItem(
-            title = "Winkelwagen",
-            route = Screen.Cart.route,
-            selectedItem = Icons.Filled.ShoppingCart,
-            unselectedItem = Icons.Outlined.ShoppingCart,
+            "Winkelwagen",
+            Screen.Cart.route,
+            Icons.Filled.ShoppingCart,
+            Icons.Outlined.ShoppingCart,
             badgeCount = cartItems.size
         )
     )
@@ -74,18 +64,23 @@ fun BottomBar(
     val currentRoute = currentBackStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = Color.White
+        containerColor = Color.White,
+        modifier = Modifier.testTag(testTagPrefix)
     ) {
         navItems.forEach { item ->
             val isSelected = currentRoute == item.route
 
             NavigationBarItem(
+                modifier = Modifier
+                    .testTag("$testTagPrefix-item-${item.route}")
+                    // makes selection assertable without depending on visuals
+                    .semantics { stateDescription = if (isSelected) "selected" else "unselected" },
                 icon = {
                     BadgedBox(
                         badge = {
-                            item.badgeCount?.takeIf { it > 0 }?.let {
-                                Badge {
-                                    Text(text = it.toString())
+                            item.badgeCount?.takeIf { it > 0 }?.let { count ->
+                                Badge(modifier = Modifier.testTag("$testTagPrefix-badge-${item.route}")) {
+                                    Text(text = count.toString())
                                 }
                             }
                         }
@@ -105,7 +100,6 @@ fun BottomBar(
                             if (item.route == Screen.Home.route || currentRoute == Screen.Cart.route) {
                                 popUpTo(item.route)
                             }
-
                             launchSingleTop = true
                             restoreState = true
                         }

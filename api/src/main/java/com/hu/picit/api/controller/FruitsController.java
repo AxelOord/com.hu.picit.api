@@ -7,16 +7,11 @@ import main.java.com.hu.picit.api.model.fruit.*;
 import main.java.com.hu.picit.service.FruitService;
 
 @Controller("/api/[controller]")
-public class FruitsController extends BaseController<Fruit> {
+public class FruitsController extends BaseController<FruitDTO> {
     @Autowired
     private FruitService fruitService = new FruitService();
     
     public FruitsController() {
-    }
-
-    @HttpGet()
-    private List<FruitDTO> getFruits(){
-        return fruitService.getFruits();
     }
 
     @HttpGet("/recommended")
@@ -29,14 +24,15 @@ public class FruitsController extends BaseController<Fruit> {
         return fruitService.getFruitsByCategory(category);
     }
 
+    @Override
     @HttpGet("/{id}")
-    private FruitDTO getFruit(@PathVariable("id") int id){
-        FruitDTO fruit = fruitService.getFruit(id);
-        
-        if(fruit == null) {
-            return null;
-        }
+    protected FruitDTO handleGetById(@PathVariable("id") int id) {
+        return fruitService.getFruit(id);
+    }
 
-        return fruit;
+    @Override
+    @HttpGet()
+    protected List<FruitDTO> handleGetAll() {
+        return fruitService.getFruits();
     }
 }

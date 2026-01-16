@@ -22,4 +22,16 @@ public class CategoriesController extends BaseController<Category>  {
     private List<CategoryDTO> getCategories(){
         return categoryService.getCategories();
     }
+
+    @Override
+    protected Category handleGetById(int id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'handleGetById'");
+    }
+
+    @Override
+    protected List<Category> handleGetAll() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'handleGetAll'");
+    }
 }

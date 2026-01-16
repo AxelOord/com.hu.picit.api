@@ -3,6 +3,8 @@ package main.java.com.hu.core.controller;
 import com.sun.net.httpserver.HttpExchange;
 
 import main.java.com.hu.core.annotation.Controller;
+import main.java.com.hu.core.annotation.HttpGet;
+import main.java.com.hu.core.annotation.PathVariable;
 import main.java.com.hu.core.enums.HttpStatusCodeEnum;
 import main.java.com.hu.core.model.Response;
 import main.java.com.hu.core.util.JsonUtil;
@@ -10,6 +12,7 @@ import main.java.com.hu.core.util.JsonUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public abstract class BaseController<T> {
     public void sendResponse(HttpExchange exchange, T result) throws IOException {
@@ -59,4 +62,10 @@ public abstract class BaseController<T> {
         // never happen
         return "/api/" + className.toLowerCase();
     }
+
+    @HttpGet("/{id}")
+    protected abstract T handleGetById(@PathVariable("id") int id);
+
+    @HttpGet()
+    protected abstract List<T> handleGetAll();
 }

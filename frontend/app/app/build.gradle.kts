@@ -68,10 +68,30 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.ui.test.junit4.android)
+    testImplementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.coil.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.material3)
     implementation(libs.kotlin.url.gen)
+    testImplementation(libs.junit)
+
+    // Instrumented UI tests (device/emulator)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    // Test rules and transitive dependencies:
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    // Needed for createComposeRule(), but not for createAndroidComposeRule<YourActivity>():
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    testImplementation("androidx.test.espresso:espresso-core")
+    testImplementation("org.robolectric:robolectric:4.13")
+
+    androidTestImplementation("androidx.navigation:navigation-testing:2.7.7")
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -190,23 +192,30 @@ fun ResultScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     categories.forEach { category ->
+                        val selected = category.selected.collectAsState().value
+
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = category.selected.collectAsState().value,
-                                onClick = {
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = selected,
+                                    role = Role.RadioButton
+                                ) {
                                     if (category.selected.value) {
-                                        // If already selected, simply deselect
                                         category.selected.value = false
                                         searchViewModel.updateFilters(null)
                                     } else {
-                                        // Deselect all other categories and then select the current one
                                         sharedCategoryViewModel.deselectAllCategories(category)
                                         category.selected.value = true
                                         searchViewModel.updateFilters(category)
                                     }
                                 }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            RadioButton(
+                                selected = selected,
+                                onClick = null // delegate to Row
                             )
                             Text(
                                 text = category.name,
